@@ -1,4 +1,5 @@
-﻿using HotelListing.API.Repository;
+﻿using HotelListing.API.DTOs;
+using HotelListing.API.Repository;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -23,7 +24,13 @@ namespace HotelListing.API.Controllers
                 {
                     return NotFound("No countries found.");
                 }
-                return Ok(countries);
+                var countriesDto = countries.Select(c => new GetCountryDTO
+                {
+                    Name = c.Name,
+                    ShortName = c.ShortName,
+                    Hotels = c.Hotels
+                }).ToList();
+                return Ok(countriesDto);
             }
             catch (Exception ex)
             {
@@ -40,7 +47,13 @@ namespace HotelListing.API.Controllers
                 {
                     return NotFound($"Country with ID {id} not found.");
                 }
-                return Ok(country);
+                var countryDTO = new GetCountryDTO
+                {
+                    Name = country.Name,
+                    ShortName = country.ShortName,
+                    Hotels = country.Hotels
+                };
+                return Ok(countryDTO);
             }
             catch (Exception ex)
             {
@@ -48,7 +61,7 @@ namespace HotelListing.API.Controllers
             }
         }
         [HttpPost("addCountry")]
-        public async Task<IActionResult> AddCountry([FromBody] Models.Country country)
+        public async Task<IActionResult> AddCountry([FromBody] AddCountry country)
         {
             try
             {
@@ -56,7 +69,13 @@ namespace HotelListing.API.Controllers
                 {
                     return BadRequest("Country data is null.");
                 }
-                await _repository.AddCountry(country);
+                var newCountry = new Models.Country
+                {
+                    Id = new int(), // Assuming ID is auto-generated
+                    Name = country.Name,
+                    ShortName = country.ShortName
+                };
+                await _repository.AddCountry(newCountry);
                 return CreatedAtAction(nameof(GetCountryById), new { id = country.Id }, country);
             }
             catch (Exception ex)
@@ -65,7 +84,7 @@ namespace HotelListing.API.Controllers
             }
         }
         [HttpPut("updateCountry/{id:int}")]
-        public async Task<IActionResult> UpdateCountry(int id, [FromBody] Models.Country country)
+        public async Task<IActionResult> UpdateCountry(int id, UpdateCountryDTO country)
         {
             try
             {
@@ -78,7 +97,13 @@ namespace HotelListing.API.Controllers
                 {
                     return NotFound($"Country with ID {id} not found.");
                 }
-                await _repository.UpdateCountry(id, country);
+                var updatedCountry = new Models.Country
+                {
+                    Id = country.Id,
+                    Name = country.Name,
+                    ShortName = country.ShortName
+                };
+                await _repository.UpdateCountry(id, updatedCountry);
                 return NoContent();
             }
             catch (Exception ex)

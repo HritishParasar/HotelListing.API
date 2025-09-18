@@ -1,4 +1,5 @@
-﻿using HotelListing.API.Repository;
+﻿using HotelListing.API.DTOs;
+using HotelListing.API.Repository;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -24,7 +25,15 @@ namespace HotelListing.API.Controllers
                 {
                     return NotFound("No Hotels Found.");
                 }
-                return Ok(hotels);
+                var hotelsDTO = hotels.Select(h => new GetHotelDTO
+                {
+                    Name = h.Name,
+                    Address = h.Address,
+                    Rating = h.Rating,
+                    CountryId = h.CountryId,
+                    Country = h.Country
+                });
+                return Ok(hotelsDTO);
             }
             catch(Exception ex)
             {
@@ -36,12 +45,20 @@ namespace HotelListing.API.Controllers
         {
             try
             {
-              var hotel = await repository.GetHotelByID(id);
+                var hotel = await repository.GetHotelByID(id);
                 if(hotel == null)
                 {
                     return NotFound($"No Hotel Found with ID : {id}");
                 }
-                return Ok(hotel);
+                var hotelDTO = new GetHotelDTO
+                {
+                    Name = hotel.Name,
+                    Address = hotel.Address,
+                    Rating = hotel.Rating,
+                    CountryId = hotel.CountryId,
+                    Country = hotel.Country
+                };
+                return Ok(hotelDTO);
             }
             catch(Exception ex)
             {
@@ -49,7 +66,7 @@ namespace HotelListing.API.Controllers
             }
         }
         [HttpPost("addHotel")]
-        public async Task<IActionResult> AddHotel([FromBody] Models.Hotel hotel)
+        public async Task<IActionResult> AddHotel([FromBody] AddHotelDTO hotel)
         {
             try
             {
@@ -57,7 +74,14 @@ namespace HotelListing.API.Controllers
                 {
                     return BadRequest("Hotel is null.");
                 }
-                await repository.AddHotel(hotel);
+                var newHotel = new Models.Hotel
+                {
+                    Name = hotel.Name,
+                    Address = hotel.Address,
+                    Rating = hotel.Rating,
+                    CountryId = hotel.CountryId
+                };
+                await repository.AddHotel(newHotel);
                 return Ok("Hotel Added Successfully.");
             }
             catch(Exception ex)
@@ -66,7 +90,7 @@ namespace HotelListing.API.Controllers
             }
         }
         [HttpPut("updateHotel/{id}")]
-        public async Task<IActionResult> UpdateHotel(int id,[FromBody] Models.Hotel hotel)
+        public async Task<IActionResult> UpdateHotel(int id,[FromBody] UpdateHotelDTO hotel)
         {
             try
             {
